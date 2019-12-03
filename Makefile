@@ -6,7 +6,7 @@
 #    By: tharchen <tharchen@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2019/11/15 23:43:12 by tharchen          #+#    #+#              #
-#    Updated: 2019/12/01 12:08:46 by tharchen         ###   ########.fr        #
+#    Updated: 2019/12/03 08:07:08 by tharchen         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 #                                                                              #
@@ -30,8 +30,8 @@ CC					=	gcc
 
 FLAGS				=	-Wall -Wextra -Werror -O3 -g3 -fsanitize=address
 
-FLAGS_MLX			=	-L./$(MLX_PATH) -lmlx -framework OpenGL -framework AppKit
-# FLAGS_MLX			=	-lmlx -framework OpenGL -framework AppKit
+# FLAGS_MLX			=	-L./$(MLX_PATH) -lmlx -framework OpenGL -framework AppKit
+FLAGS_MLX			=	-lmlx -framework OpenGL -framework AppKit
 
 # *** HEADER MLX ************************************************************* #
 
@@ -93,11 +93,11 @@ OBJS				=	$(addprefix $(OBJS_DIR), $(OBJS_LIST))
 all: $(NAME)
 
 $(NAME): $(OBJS)
-	@ $(CC) $(FLAGS) $(FLAGS_MLX) -I $(HEADER_DIR) $(OBJS) -o $@ $(MLX_LIB) -I $(HEADER_MLX_DIR)
+	@ $(CC) $(FLAGS) $(FLAGS_MLX) -I $(HEADER_DIR) $(OBJS) -o $@ $(MLX_LIB) #-I $(HEADER_MLX_DIR)
 
 $(OBJS_DIR)%.o: $(SRCS_DIR)%.c
 	@ mkdir -p $(OBJS_DIR)
-	@ $(CC) $(FLAGS) -I $(HEADER_DIR) -c -o $@ $< -I $(HEADER_MLX_DIR)
+	@ $(CC) $(FLAGS) -I $(HEADER_DIR) -c -o $@ $< #-I $(HEADER_MLX_DIR)
 	@ echo "\033[31mProgram \033[32m$(NAME) : \033[34mCompilation of \033[36m$(notdir $<)\033[0m"
 
 norm:

@@ -6,14 +6,14 @@
 /*   By: tharchen <tharchen@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/12/01 12:08:51 by tharchen          #+#    #+#             */
-/*   Updated: 2019/12/01 20:01:43 by tharchen         ###   ########.fr       */
+/*   Updated: 2019/12/03 08:17:26 by tharchen         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <lg.h>
 
-# define WIN_X 980
-# define WIN_Y 780
+# define WIN_X		g_mlx.win.x
+# define WIN_Y		g_mlx.win.y
 
 # define MLX_ID		g_mlx.id
 # define WIN_ID		g_mlx.win.id
@@ -30,8 +30,9 @@
 # define DEAD		0
 # define ALIVE		1
 
-# define COLOR_ALIVE	255, 255, 255
-# define COLOR_DEAD		0, 0, 0
+# define COLOR_ALIVE_NEW	255, 50, 50
+# define COLOR_ALIVE		255, 255, 255
+# define COLOR_DEAD			0, 0, 0
 
 # define CELL_TOP_LEFT_		(i > 0 && i < MAP_Y - 1 && j > 0 && j < MAP_X - 1 ? MAP[i - 1][j - 1] : 0)
 # define CELL_TOP_MID__		(i > 0 && i < MAP_Y - 1 && j > 0 && j < MAP_X - 1 ? MAP[i - 1][j]     : 0)
@@ -104,13 +105,13 @@ void	init_map(int id, int x, int y)
 	g_map[id].y = y;
 }
 
-void	init_mlx(void)
+void	init_mlx(int x, int y)
 {
 	MLX_ID = mlx_init();
 	WIN_ID = mlx_new_window(MLX_ID, WIN_X, WIN_Y, "Lifegame");
-	g_mlx.win.x = WIN_X;
-	g_mlx.win.y = WIN_Y;
-	IMG_X = WIN_X * 0.8;
+	g_mlx.win.x = x;
+	g_mlx.win.y = y;
+	IMG_X = WIN_X;
 	IMG_Y = WIN_Y;
 	IMG_ID = mlx_new_image(MLX_ID, IMG_X, IMG_Y);
 	g_mlx.win.img.data = (unsigned int *)mlx_get_data_addr(IMG_ID, &g_mlx.win.img.bpp, &g_mlx.win.img.sl, &g_mlx.win.img.ed);
@@ -125,13 +126,32 @@ void	pixset(int x, int y, int r, int g, int b)
 		{ tmp[3] = 0; tmp[2] = r; tmp[1] = g; tmp[0] = b; }
 	else
 		{ tmp[0] = 0; tmp[1] = r; tmp[2] = g; tmp[3] = b; }
-	g_mlx.win.img.data[y * IMG_X + x] = mlx_get_color_value(MLX_ID, (int)pixel);
+	IMG_GRID[y][x] = mlx_get_color_value(MLX_ID, (int)pixel);
 }
 
 void	map_to_image(void)
 {
-	int spix_x = IMG_X / MAP_X + 1;
-	int spix_y = IMG_Y / MAP_Y + 1;
+	int spix_x = (double)(IMG_X / MAP_X) > 0.5 ? IMG_X / MAP_X + 1 : IMG_X / MAP_X;
+	int spix_y = (double)(IMG_Y / MAP_Y) > 0.5 ? IMG_Y / MAP_Y + 1 : IMG_Y / MAP_Y;
+
+	int i = 0;
+	int j = 0;
+
+	int i_map = 0;
+	int j_map = 0;
+
+	int i_cell = 0;
+	int j_cell = 0;
+
+	while (i < IMG_Y)
+	{
+		while (j < IMG_X)
+		{
+			
+			j += spix_x;
+		}
+		i += spix_y;
+	}
 
 	for (int i = 0, ii = 0; i < IMG_Y && ii < MAP_Y; i += spix_y, ii++)
 	{
@@ -141,7 +161,9 @@ void	map_to_image(void)
 			{
 				for (int l = j; l < spix_x + j; l++)
 				{
-					if (MAP[ii][jj])
+					if (MAP[ii][jj] == 1)
+						pixset(l, k, COLOR_ALIVE_NEW);
+					else if (MAP[ii][jj])
 						pixset(l, k, COLOR_ALIVE);
 					else
 						pixset(l, k, COLOR_DEAD);
@@ -161,6 +183,12 @@ int		process(void *arg)
 	int	tot = 0;
 
 	(void)arg;
+	printf("WIN_X : %d\n", WIN_X);
+	printf("WIN_Y : %d\n", WIN_Y);
+	printf("IMG_X : %d\n", IMG_X);
+	printf("IMG_Y : %d\n", IMG_Y);
+	printf("MAP_X : %d\n", MAP_X);
+	printf("MAP_Y : %d\n", MAP_Y);
 	while (42)
 	{
 		for (int i = 0; i < MAP_Y; i++)
@@ -182,7 +210,7 @@ int		process(void *arg)
 				if (tot == 3)
 					g_map[next_curr()].map[i][j] = 1;
 				else if (tot == 2)
-					g_map[next_curr()].map[i][j] = g_map[curr].map[i][j];
+					g_map[next_curr()].map[i][j] = g_map[curr].map[i][j] * 2;
 				else if (tot < 2 || tot > 3)
 					g_map[next_curr()].map[i][j] = 0;
 
@@ -199,29 +227,21 @@ int		process(void *arg)
 
 int		main(int ac, char **av)
 {
-	if (ac != 3)
-		return (printf("usage: lifegame x y\n") * 0 + -1);
-	init_mlx();
-	init_map(0, atoi(av[1]), atoi(av[2]));
-	init_map(1, atoi(av[1]), atoi(av[2]));
+	if (ac != 5)
+		return (printf("usage: lifegame win_x, win_y map_x map_y\n") * 0 + -1);
+	srand(time(NULL));
+	init_mlx(atoi(av[1]), atoi(av[2]));
+	init_map(0, atoi(av[3]), atoi(av[4]));
+	init_map(1, atoi(av[3]), atoi(av[4]));
 	init_grid();
 
-	// for (int i = MAP_Y / 2 - INIT; i < MAP_Y / 2 + INIT; i++)
-	// 	for (int j = MAP_X / 2 - INIT; j < MAP_X / 2 + INIT; j++)
-	// 		MAP[i][j] = ft_rand_bin();
 	for (int i = 0; i < MAP_Y; i++)
 		for (int j = 0; j < MAP_X; j++)
 			MAP[i][j] = ft_rand_bin();
-
 	map_to_image();
 	mlx_put_image_to_window(MLX_ID, WIN_ID, IMG_ID, 0, 0);
 	mlx_do_sync(MLX_ID);
-	// for (int i = 0; i < MAP_Y; i++)
-	// {
-	// 	for (int j = 0; j < MAP_X; j++)
-	// 		printf("%d", MAP[i][j]);
-	// 	printf("\n");
-	// }
+
 	process(NULL);
 	// mlx_loop_hook(WIN_ID, process, NULL);
 	// mlx_loop(MLX_ID);
